@@ -1,0 +1,108 @@
+{
+  "min_packer_version": "1.0.0",
+  "variables": {
+    "aws_access_key": "{{ env `AWS_ACCESS_KEY_ID` }}",
+    "aws_secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+    "aws_region": "{{ env `AMI_REGION` }}",
+    "source_ami": "{{ env `SOURCE_AMI_ID` }}",
+    "ami_groups": "{{ env `AMI_GROUPS` }}",
+    "ami_users": "{{ env `AMI_USERS` }}",
+    "instance_type": "t2.small",
+
+    "ami_name": "amazon-linux-{{ isotime \"2006-01-02\" }}-{{ timestamp }}",
+    "ami_description": "Amazon Linux Image {{ isotime \"2006-01-02\" }}",
+
+    "associate_public_ip_address": "true",
+    "subnet_id": "",
+    "ebs_optimized": "false",
+    "enhanced_networking": "true",
+    "iam_instance_profile": "",
+    "security_group_id": "",
+    "ami_virtualization_type": "hvm",
+
+    "ansible_version": "2.2.2.0",
+    "powered_by": "packer",
+    "built_by": "{{ env `USER` }}",
+
+    "ssh_username": "ec2-user",
+    "ssh_keypair_name": "packer",
+    "ssh_private_key_file": "packer.pem",
+    "ssh_agent_auth": "false",
+    "ssh_timeout": "5m",
+
+    "force_deregister": "true",
+    "force_delete_snapshot": "true"
+
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{ user `aws_access_key` }}",
+    "secret_key": "{{ user `aws_secret_key` }}",
+    "region": "{{ user `aws_region` }}",
+
+    "source_ami": "{{ user `source_ami` }}",
+    "ami_name": "{{ user `ami_name` }}",
+    "ami_description": "{{ user `ami_description` }}",
+    "ami_groups": "{{ user `ami_groups` }}",
+    "ami_users": "{{ user `ami_users` }}",
+    "force_deregister": "{{ user `force_deregister` }}",
+    "force_delete_snapshot": "{{ user `force_delete_snapshot` }}",
+
+    "instance_type": "{{ user `instance_type` }}",
+    "subnet_id": "{{ user `subnet_id` }}",
+    "associate_public_ip_address": "{{ user `associate_public_ip_address` }}",
+    "ebs_optimized": "{{ user `ebs_optimized` }}",
+    "enhanced_networking": "{{ user `enhanced_networking` }}",
+    "iam_instance_profile": "{{ user `iam_instance_profile` }}",
+    "security_group_id": "{{ user `security_group_id` }}",
+    "ami_virtualization_type": "{{ user `ami_virtualization_type` }}",
+
+    "tags": {
+      "powered_by": "{{ user `powered_by` }}",
+      "built_by": "{{ user `built_by` }}",
+      "ami_name": "amazon-linux",
+      "source_ami": "{{ user `source_ami` }}",
+      "Name": "{{ user `ami_name` }}"
+    },
+
+    "communicator": "ssh",
+    "ssh_agent_auth": "{{ user `ssh_agent_auth`}}",
+    "ssh_username": "{{ user `ssh_username`}}",
+    "ssh_keypair_name": "{{ user `ssh_keypair_name`}}",
+    "ssh_private_key_file": "{{ user `ssh_private_key_file`}}",
+    "ssh_timeout": "{{ user `ssh_timeout`}}",
+    "ssh_file_transfer_method": "sftp",
+    "ssh_pty": true,
+
+    "ami_block_device_mappings": [
+      {
+        "device_name": "/dev/xvda",
+        "volume_size": 20,
+        "volume_type": "gp2",
+        "delete_on_termination": true
+      }
+    ],
+    "launch_block_device_mappings": [
+      {
+        "device_name": "/dev/xvda",
+        "volume_size": 20,
+        "volume_type": "gp2",
+        "delete_on_termination": true
+      }
+    ]
+  }],
+
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/amazon-linux-bootstrap.sh",
+      "destination": "/home/{{ user `ssh_username` }}/bootstrap.sh"
+    }, {
+    "type": "shell",
+    "inline": [
+      "sudo chmod +x /home/{{ user `ssh_username` }}/bootstrap.sh",
+      "sudo bash /home/{{ user `ssh_username` }}/bootstrap.sh"
+    ]
+    }]
+
+}
