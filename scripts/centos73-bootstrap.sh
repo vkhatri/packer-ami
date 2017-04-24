@@ -3,7 +3,7 @@ set -x
 
 # install epel repo
 sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-/usr/bin/yum-config-manager --disable epel
+sudo /usr/bin/yum-config-manager --disable epel
 
 # yup update
 sudo yum -y update
